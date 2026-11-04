@@ -323,10 +323,12 @@ Não há deploy. O protótipo roda localmente, e só o banco de dados fica na nu
 
 | Tela | Captura de Tela |
 | :---: | :---: |
-| **Login** | **Cadastro de Cliente** |
-| <img src="docs/prints/login.png" alt="Tela de Login" width="400px"> | <img src="docs/prints/cadastro.png" alt="Tela de Cadastro de Cliente" width="400px"> |
-| **Pedidos do Cliente** | **Avaliação de Pedidos (Agente)** |
-| <img src="docs/prints/pedidos.png" alt="Tela de Pedidos do Cliente" width="400px"> | <img src="docs/prints/avaliacao.png" alt="Tela de Avaliação de Pedidos" width="400px"> |
+| **Página Inicial** | **Login** |
+| <img src="docs/prints/inicio.png" alt="Página Inicial" width="400px"> | <img src="docs/prints/login.png" alt="Tela de Login" width="400px"> |
+| **Cadastro de Cliente** | **Pedidos do Cliente** |
+| <img src="docs/prints/cadastro.png" alt="Tela de Cadastro de Cliente" width="400px"> | <img src="docs/prints/pedidos.png" alt="Tela de Pedidos do Cliente" width="400px"> |
+| **Avaliação de Pedidos (Agente)** | |
+| <img src="docs/prints/avaliacao.png" alt="Tela de Avaliação de Pedidos" width="400px"> | |
 
 ### 💻 Exemplo de Saída no Terminal (API)
 

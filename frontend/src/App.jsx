@@ -1,21 +1,18 @@
 import { useEffect, useState } from 'react'
 import { api } from './api'
-import Apresentacao from './components/Apresentacao'
-import BotaoTema from './components/BotaoTema'
+import BarraLateral from './components/BarraLateral'
+import Carregando from './components/Carregando'
+import TopoPublico from './components/TopoPublico'
 import Cadastro from './pages/Cadastro'
+import Inicio from './pages/Inicio'
 import Login from './pages/Login'
 import MeusDados from './pages/MeusDados'
 import Pedidos from './pages/Pedidos'
 import PedidosAgente from './pages/PedidosAgente'
 
-const ABAS_CLIENTE = [
-  ['pedidos', 'Meus pedidos'],
-  ['dados', 'Meus dados'],
-]
-
 export default function App() {
   const [usuario, setUsuario] = useState(null)
-  const [tela, setTela] = useState('login')
+  const [tela, setTela] = useState('inicio')
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
 
@@ -37,56 +34,44 @@ export default function App() {
   async function sair() {
     await api.logout().catch(() => {})
     setUsuario(null)
-    setTela('login')
+    setTela('inicio')
   }
 
-  if (carregando) return <p className="centro">Carregando…</p>
+  function trocarTela(nova) {
+    setTela(nova)
+    window.scrollTo(0, 0)
+  }
 
-  const ehCliente = usuario?.perfil === 'CLIENTE'
+  if (carregando) return <Carregando />
+
+  if (!usuario) {
+    return (
+      <div className="publico">
+        <TopoPublico tela={tela} onTrocarTela={trocarTela} />
+        {erro && <p className="erro centro" role="alert">{erro}</p>}
+        {tela === 'inicio' && <Inicio onTrocarTela={trocarTela} />}
+        {tela !== 'inicio' && (
+          <div className="acesso">
+            {tela === 'cadastro'
+              ? <Cadastro onEntrar={entrar} onVoltar={() => trocarTela('login')} />
+              : <Login onEntrar={entrar} onCadastrar={() => trocarTela('cadastro')} />}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const ehCliente = usuario.perfil === 'CLIENTE'
 
   return (
-    <>
-      <header className="topo">
-        <span className="logo" role="img" aria-label="Locar · Locadora de Carros" />
-        {ehCliente && (
-          <nav aria-label="Telas">
-            {ABAS_CLIENTE.map(([id, nome]) => (
-              <button
-                key={id}
-                className={tela === id ? 'aba ativa' : 'aba'}
-                aria-current={tela === id ? 'page' : undefined}
-                onClick={() => setTela(id)}
-              >
-                {nome}
-              </button>
-            ))}
-          </nav>
-        )}
-        <div className="conta">
-          {usuario && (
-            <span className="usuario">
-              <strong>{usuario.nome}</strong>
-              {ehCliente ? 'Cliente' : 'Agente'}
-            </span>
-          )}
-          <BotaoTema />
-          {usuario && <button className="secundario" onClick={sair}>Sair</button>}
-        </div>
-      </header>
-
-      {erro && <p className="erro centro" role="alert">{erro}</p>}
-
-      {!usuario && (
-        <div className={tela === 'cadastro' ? 'acesso cadastro' : 'acesso'}>
-          <Apresentacao />
-          {tela === 'cadastro'
-            ? <Cadastro onEntrar={entrar} onVoltar={() => setTela('login')} />
-            : <Login onEntrar={entrar} onCadastrar={() => setTela('cadastro')} />}
-        </div>
-      )}
-      {ehCliente && tela === 'pedidos' && <Pedidos />}
-      {ehCliente && tela === 'dados' && <MeusDados usuario={usuario} onAtualizar={setUsuario} onExcluir={sair} />}
-      {usuario?.perfil === 'AGENTE' && <PedidosAgente />}
-    </>
+    <div className="app">
+      <BarraLateral usuario={usuario} tela={tela} onTrocarTela={trocarTela} onSair={sair} />
+      <div className="conteudo">
+        {erro && <p className="erro centro" role="alert">{erro}</p>}
+        {ehCliente && tela === 'pedidos' && <Pedidos />}
+        {ehCliente && tela === 'dados' && <MeusDados usuario={usuario} onAtualizar={setUsuario} onExcluir={sair} />}
+        {!ehCliente && <PedidosAgente />}
+      </div>
+    </div>
   )
 }

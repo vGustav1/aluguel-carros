@@ -1,16 +1,28 @@
+import { Briefcase, Building2, IdCard, KeyRound, Lock, MapPin, Plus, Save, Trash2, User, UserPlus, Wallet } from 'lucide-react'
 import { useState } from 'react'
+import Aviso from './Aviso'
 
 const MAX_RENDIMENTOS = 3
 const CAMPOS = ['nome', 'login', 'senha', 'rg', 'cpf', 'endereco', 'profissao']
 
-// Troca null por '' para os inputs não reclamarem
 function estadoInicial(inicial = {}) {
   const dados = { rendimentos: inicial.rendimentos ?? [] }
   CAMPOS.forEach((c) => { dados[c] = inicial[c] ?? '' })
   return dados
 }
 
-// Usado no cadastro e em "Meus dados"
+function Campo({ rotulo, icone: Icone, ...props }) {
+  return (
+    <label>
+      {rotulo}
+      <span className="campo-icone">
+        <Icone aria-hidden="true" />
+        <input {...props} />
+      </span>
+    </label>
+  )
+}
+
 export default function FormCliente({ inicial, comAcesso, textoBotao, onEnviar }) {
   const [dados, setDados] = useState(() => estadoInicial(inicial))
   const [erro, setErro] = useState('')
@@ -50,45 +62,66 @@ export default function FormCliente({ inicial, comAcesso, textoBotao, onEnviar }
     }
   }
 
+  const IconeBotao = comAcesso ? UserPlus : Save
+
   return (
     <form onSubmit={enviar}>
-      <label>Nome<input {...campo('nome')} required /></label>
       {comAcesso && (
-        <div className="linha">
-          <label>Login<input {...campo('login')} autoComplete="username" required /></label>
-          <label>Senha<input type="password" {...campo('senha')} autoComplete="new-password" required /></label>
-        </div>
+        <fieldset>
+          <legend><KeyRound aria-hidden="true" />Acesso</legend>
+          <div className="linha">
+            <Campo rotulo="Login" icone={User} {...campo('login')} autoComplete="username" required />
+            <Campo rotulo="Senha" icone={Lock} type="password" {...campo('senha')} autoComplete="new-password" required />
+          </div>
+        </fieldset>
       )}
-      <div className="linha">
-        <label>RG<input {...campo('rg')} required /></label>
-        <label>CPF<input {...campo('cpf')} required /></label>
-      </div>
-      <label>Endereço<input {...campo('endereco')} required /></label>
-      <label>Profissão<input {...campo('profissao')} required /></label>
 
       <fieldset>
-        <legend>Rendimentos (até {MAX_RENDIMENTOS})</legend>
+        <legend><IdCard aria-hidden="true" />Dados pessoais</legend>
+        <Campo rotulo="Nome" icone={User} {...campo('nome')} required />
+        <div className="linha">
+          <Campo rotulo="RG" icone={IdCard} {...campo('rg')} required />
+          <Campo rotulo="CPF" icone={IdCard} {...campo('cpf')} required />
+        </div>
+        <Campo rotulo="Endereço" icone={MapPin} {...campo('endereco')} required />
+        <Campo rotulo="Profissão" icone={Briefcase} {...campo('profissao')} required />
+      </fieldset>
+
+      <fieldset>
+        <legend><Wallet aria-hidden="true" />Rendimentos <span className="contagem">{dados.rendimentos.length} de {MAX_RENDIMENTOS}</span></legend>
+        {dados.rendimentos.length === 0 && <p className="vazio">Nenhum rendimento informado.</p>}
         {dados.rendimentos.map((r, i) => (
-          <div className="linha" key={i}>
-            <label>
-              Entidade empregadora
-              <input value={r.entidadeEmpregadora} onChange={(e) => alterarRendimento(i, 'entidadeEmpregadora', e.target.value)} required />
-            </label>
-            <label>
-              Valor (R$)
-              <input type="number" min="0" step="0.01" value={r.valor} onChange={(e) => alterarRendimento(i, 'valor', e.target.value)} required />
-            </label>
-            <button type="button" className="secundario" onClick={() => removerRendimento(i)}>Remover</button>
+          <div className="linha rendimento" key={i}>
+            <Campo
+              rotulo="Entidade empregadora" icone={Building2} value={r.entidadeEmpregadora}
+              onChange={(e) => alterarRendimento(i, 'entidadeEmpregadora', e.target.value)} required
+            />
+            <Campo
+              rotulo="Valor (R$)" icone={Wallet} type="number" min="0" step="0.01" value={r.valor}
+              onChange={(e) => alterarRendimento(i, 'valor', e.target.value)} required
+            />
+            <button
+              type="button" className="botao-icone perigo" onClick={() => removerRendimento(i)}
+              aria-label={`Remover rendimento ${i + 1}`} title="Remover rendimento"
+            >
+              <Trash2 aria-hidden="true" />
+            </button>
           </div>
         ))}
         {dados.rendimentos.length < MAX_RENDIMENTOS && (
-          <button type="button" className="secundario" onClick={adicionarRendimento}>+ Adicionar rendimento</button>
+          <button type="button" className="secundario tracejado" onClick={adicionarRendimento}>
+            <Plus aria-hidden="true" />
+            Adicionar rendimento
+          </button>
         )}
       </fieldset>
 
-      {erro && <p className="erro" role="alert">{erro}</p>}
-      {sucesso && <p className="sucesso" role="status">{sucesso}</p>}
-      <button disabled={enviando}>{enviando ? 'Salvando…' : textoBotao}</button>
+      {erro && <Aviso>{erro}</Aviso>}
+      {sucesso && <Aviso tipo="sucesso">{sucesso}</Aviso>}
+      <button className="botao-grande" disabled={enviando}>
+        <IconeBotao aria-hidden="true" />
+        {enviando ? 'Salvando…' : textoBotao}
+      </button>
     </form>
   )
 }

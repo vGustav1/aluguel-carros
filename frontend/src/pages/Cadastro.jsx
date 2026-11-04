@@ -1,3 +1,4 @@
+import { UserPlus } from 'lucide-react'
 import { api } from '../api'
 import FormCliente from '../components/FormCliente'
 
@@ -8,14 +9,15 @@ export default function Cadastro({ onEntrar, onVoltar }) {
     } catch (e) {
       throw new Error(e.status === 409 ? 'Este login já está em uso. Escolha outro.' : e.message)
     }
-    // Conta criada: já entra no sistema
     await api.login(dados.login, dados.senha)
     onEntrar(await api.usuarioLogado())
   }
 
   return (
-    <main className="cartao">
-      <h1>Criar conta de cliente</h1>
+    <main className="cartao acesso-cartao largo">
+      <span className="acesso-icone"><UserPlus aria-hidden="true" /></span>
+      <h1>Criar conta</h1>
+      <p className="subtitulo">Cadastre-se uma vez e faça seus pedidos de aluguel de onde estiver.</p>
       <FormCliente comAcesso textoBotao="Criar conta" onEnviar={cadastrar} />
       <p className="rodape">
         Já tem conta? <button type="button" className="link" onClick={onVoltar}>Entrar</button>

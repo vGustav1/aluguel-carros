@@ -5,16 +5,26 @@ import java.util.List;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Entity
 public class Cliente extends Usuario {
 
+    @NotBlank
     private String rg;
+
+    @NotBlank
     private String cpf;
+
+    @NotBlank
     private String endereco;
+
+    @NotBlank
     private String profissao;
 
+    @Valid
     @Size(max = 3)
     @ElementCollection
     private List<Rendimento> rendimentos = new ArrayList<>();

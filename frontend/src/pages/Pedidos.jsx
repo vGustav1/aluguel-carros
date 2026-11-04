@@ -1,6 +1,13 @@
+import { Ban, CarFront, CircleCheck, CirclePlus, ClipboardList, Clock, History, Inbox, Pencil, Send, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { api } from '../api'
-import { STATUS, descricaoAutomovel as descricao } from '../formato'
+import Aviso from '../components/Aviso'
+import CabecalhoPagina from '../components/CabecalhoPagina'
+import Carregando from '../components/Carregando'
+import EstadoVazio from '../components/EstadoVazio'
+import Indicador from '../components/Indicador'
+import StatusPedido from '../components/StatusPedido'
+import { contarPorStatus, descricaoAutomovel, numeroPedido } from '../formato'
 
 function mensagemErro(e) {
   return e.status === 409 ? 'Este pedido não pode mais ser alterado.' : e.message
@@ -58,97 +65,143 @@ export default function Pedidos() {
   }
 
   function cancelar(pedido) {
-    if (!window.confirm(`Cancelar o pedido nº ${pedido.id}?`)) return
+    if (!window.confirm(`Cancelar o pedido ${numeroPedido(pedido.id)}?`)) return
     executar(async () => trocarNaLista(await api.cancelarPedido(pedido.id)))
   }
 
-  if (carregando) return <p className="centro">Carregando pedidos…</p>
+  if (carregando) return <Carregando texto="Carregando pedidos…" />
 
   const ordenados = [...pedidos].sort((a, b) => b.id - a.id)
 
   return (
-    <main className="cartao">
-      <h1>Meus pedidos</h1>
+    <main className="pagina">
+      <CabecalhoPagina
+        icone={ClipboardList}
+        titulo="Meus pedidos"
+        descricao="Escolha um automóvel, envie o pedido e acompanhe a análise."
+      />
 
-      <form onSubmit={criar}>
-        <div className="linha">
-          <label>
-            Automóvel
-            <select value={novoAutomovel} onChange={(e) => setNovoAutomovel(e.target.value)} required>
-              <option value="" disabled>Selecione um automóvel</option>
-              {automoveis.map((a) => <option key={a.id} value={a.id}>{descricao(a)}</option>)}
-            </select>
-          </label>
-          <button disabled={ocupado}>Fazer pedido</button>
+      <div className="indicadores">
+        <Indicador icone={ClipboardList} rotulo="Total de pedidos" valor={pedidos.length} />
+        <Indicador icone={Clock} rotulo="Em análise" valor={contarPorStatus(pedidos, 'EM_ANALISE')} tom="amarelo" />
+        <Indicador icone={CircleCheck} rotulo="Aprovados" valor={contarPorStatus(pedidos, 'APROVADO')} tom="verde" />
+        <Indicador icone={Ban} rotulo="Reprovados ou cancelados" valor={contarPorStatus(pedidos, 'REPROVADO', 'CANCELADO')} tom="vermelho" />
+      </div>
+
+      <section className="cartao">
+        <div className="cartao-topo">
+          <h2><CirclePlus aria-hidden="true" />Novo pedido</h2>
+          <p>Selecione o automóvel que deseja alugar.</p>
         </div>
-      </form>
+        <form onSubmit={criar}>
+          <fieldset className="carros">
+            <legend className="sr-only">Automóvel</legend>
+            {automoveis.map((a) => {
+              const selecionado = novoAutomovel === String(a.id)
+              return (
+                <label key={a.id} className={selecionado ? 'carro selecionado' : 'carro'}>
+                  <input
+                    type="radio" name="automovel" value={a.id} checked={selecionado}
+                    onChange={(e) => setNovoAutomovel(e.target.value)} required
+                  />
+                  <span className="carro-icone"><CarFront aria-hidden="true" /></span>
+                  <span className="carro-nome">{a.marca} {a.modelo}</span>
+                  <span className="carro-detalhe">{a.ano} · {a.placa}</span>
+                  <span className="carro-detalhe">Matrícula {a.matricula}</span>
+                  <CircleCheck className="carro-check" aria-hidden="true" />
+                </label>
+              )
+            })}
+          </fieldset>
+          <div className="formulario-acoes">
+            <button disabled={ocupado || !novoAutomovel}>
+              <Send aria-hidden="true" />
+              Fazer pedido
+            </button>
+          </div>
+        </form>
+      </section>
 
-      {erro && <p className="erro" role="alert">{erro}</p>}
+      {erro && <Aviso>{erro}</Aviso>}
 
-      <h2>Pedidos</h2>
-      {ordenados.length === 0 ? (
-        <p className="vazio">Você ainda não fez nenhum pedido.</p>
-      ) : (
-        <div className="tabela">
-          <table>
-            <thead>
-              <tr>
-                <th>Nº</th>
-                <th>Automóvel</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ordenados.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.id}</td>
-                  <td>
-                    {editando?.id === p.id ? (
-                      <select
-                        aria-label={`Novo automóvel do pedido ${p.id}`}
-                        value={editando.automovelId}
-                        onChange={(e) => setEditando({ ...editando, automovelId: e.target.value })}
-                      >
-                        {automoveis.map((a) => <option key={a.id} value={a.id}>{descricao(a)}</option>)}
-                      </select>
-                    ) : (
-                      descricao(p.automovel)
-                    )}
-                  </td>
-                  <td><span className={`status ${p.status}`}>{STATUS[p.status] ?? p.status}</span></td>
-                  <td>
-                    <div className="acoes">
-                      {editando?.id === p.id ? (
-                        <>
-                          <button onClick={salvarModificacao} disabled={ocupado}>Salvar</button>
-                          <button className="secundario" onClick={() => setEditando(null)} disabled={ocupado}>Voltar</button>
-                        </>
-                      ) : (
-                        <>
-                          {p.status === 'EM_ANALISE' && (
-                            <button
-                              className="secundario"
-                              onClick={() => setEditando({ id: p.id, automovelId: p.automovel.id })}
-                              disabled={ocupado}
-                            >
-                              Modificar
-                            </button>
-                          )}
-                          {(p.status === 'EM_ANALISE' || p.status === 'APROVADO') && (
-                            <button className="perigo" onClick={() => cancelar(p)} disabled={ocupado}>Cancelar</button>
-                          )}
-                          {p.status !== 'EM_ANALISE' && p.status !== 'APROVADO' && <span className="vazio">—</span>}
-                        </>
-                      )}
-                    </div>
-                  </td>
+      <section className="cartao">
+        <div className="cartao-topo">
+          <h2><History aria-hidden="true" />Histórico de pedidos</h2>
+        </div>
+        {ordenados.length === 0 ? (
+          <EstadoVazio icone={Inbox} titulo="Você ainda não fez nenhum pedido" texto="Escolha um automóvel acima para começar." />
+        ) : (
+          <div className="tabela">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pedido</th>
+                  <th>Automóvel</th>
+                  <th>Status</th>
+                  <th>Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {ordenados.map((p, i) => (
+                  <tr key={p.id} style={{ '--i': i }}>
+                    <td className="numero">{numeroPedido(p.id)}</td>
+                    <td>
+                      {editando?.id === p.id ? (
+                        <select
+                          aria-label={`Novo automóvel do pedido ${numeroPedido(p.id)}`}
+                          value={editando.automovelId}
+                          onChange={(e) => setEditando({ ...editando, automovelId: e.target.value })}
+                        >
+                          {automoveis.map((a) => <option key={a.id} value={a.id}>{descricaoAutomovel(a)}</option>)}
+                        </select>
+                      ) : (
+                        <span className="celula-carro">
+                          <span className="mini-icone"><CarFront aria-hidden="true" /></span>
+                          <span>
+                            <strong>{p.automovel.marca} {p.automovel.modelo}</strong>
+                            <span className="detalhe">{p.automovel.ano} · {p.automovel.placa}</span>
+                          </span>
+                        </span>
+                      )}
+                    </td>
+                    <td><StatusPedido status={p.status} /></td>
+                    <td>
+                      <div className="acoes">
+                        {editando?.id === p.id ? (
+                          <>
+                            <button className="pequeno" onClick={salvarModificacao} disabled={ocupado}>Salvar</button>
+                            <button className="secundario pequeno" onClick={() => setEditando(null)} disabled={ocupado}>Voltar</button>
+                          </>
+                        ) : (
+                          <>
+                            {p.status === 'EM_ANALISE' && (
+                              <button
+                                className="secundario pequeno"
+                                onClick={() => setEditando({ id: p.id, automovelId: p.automovel.id })}
+                                disabled={ocupado}
+                              >
+                                <Pencil aria-hidden="true" />
+                                Modificar
+                              </button>
+                            )}
+                            {(p.status === 'EM_ANALISE' || p.status === 'APROVADO') && (
+                              <button className="perigo pequeno" onClick={() => cancelar(p)} disabled={ocupado}>
+                                <X aria-hidden="true" />
+                                Cancelar
+                              </button>
+                            )}
+                            {p.status !== 'EM_ANALISE' && p.status !== 'APROVADO' && <span className="vazio">—</span>}
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </main>
   )
 }

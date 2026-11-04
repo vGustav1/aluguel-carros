@@ -41,6 +41,10 @@ public class ClienteController {
 
     @PostMapping
     public Cliente criar(@Valid @RequestBody Cliente cliente) {
+        // Login e senha só são exigidos no cadastro; na alteração eles não mudam
+        if (estaVazio(cliente.getLogin()) || estaVazio(cliente.getSenha())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
         // O login não pode repetir entre nenhum usuário
         if (usuarioRepository.findByLogin(cliente.getLogin()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
@@ -80,6 +84,10 @@ public class ClienteController {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
         repository.delete(cliente);
+    }
+
+    private boolean estaVazio(String texto) {
+        return texto == null || texto.isBlank();
     }
 
     // O cliente só pode alterar ou excluir o próprio cadastro
