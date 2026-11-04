@@ -60,4 +60,9 @@ export const api = {
     requisicao('PUT', `/pedidos/${id}`, { automovel: { id: automovelId } }),
   cancelarPedido: (id) => requisicao('POST', `/pedidos/${id}/cancelar`),
   avaliarPedido: (id, aprovado) => requisicao('POST', `/pedidos/${id}/avaliar?aprovado=${aprovado}`),
+
+  // proprietario: 'CLIENTE' ou 'AGENTE'
+  executarContrato: (id, proprietario) =>
+    requisicao('POST', `/pedidos/${id}/contrato?proprietario=${proprietario}`),
+  concederCredito: (id, valor) => requisicao('POST', `/pedidos/${id}/contrato/credito`, { valor }),
 }

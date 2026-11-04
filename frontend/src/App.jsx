@@ -2,6 +2,19 @@ import { useEffect, useState } from 'react'
 import { api } from './api'
 import Cadastro from './pages/Cadastro'
 import Login from './pages/Login'
+import MeusDados from './pages/MeusDados'
+import Pedidos from './pages/Pedidos'
+import PedidosAgente from './pages/PedidosAgente'
+
+const ABAS_CLIENTE = [
+  ['pedidos', 'Meus pedidos'],
+  ['dados', 'Meus dados'],
+]
+
+function nomePerfil(usuario) {
+  if (usuario.perfil === 'CLIENTE') return 'Cliente'
+  return usuario.papeis?.includes('BANCO') ? 'Banco' : 'Empresa'
+}
 
 export default function App() {
   const [usuario, setUsuario] = useState(null)
@@ -32,15 +45,31 @@ export default function App() {
 
   if (carregando) return <p className="centro">Carregando…</p>
 
+  const ehCliente = usuario?.perfil === 'CLIENTE'
+
   return (
     <>
       <header className="topo">
         <strong> Aluguel de Carros</strong>
-        {usuario && (
-          <nav>
-            <span className="usuario">{usuario.nome} · {usuario.perfil === 'AGENTE' ? 'Agente' : 'Cliente'}</span>
-            <button className="secundario" onClick={sair}>Sair</button>
+        {ehCliente && (
+          <nav aria-label="Telas">
+            {ABAS_CLIENTE.map(([id, nome]) => (
+              <button
+                key={id}
+                className={tela === id ? 'aba ativa' : 'aba'}
+                aria-current={tela === id ? 'page' : undefined}
+                onClick={() => setTela(id)}
+              >
+                {nome}
+              </button>
+            ))}
           </nav>
+        )}
+        {usuario && (
+          <div className="conta">
+            <span className="usuario">{usuario.nome} · {nomePerfil(usuario)}</span>
+            <button className="secundario" onClick={sair}>Sair</button>
+          </div>
         )}
       </header>
 
@@ -48,11 +77,9 @@ export default function App() {
 
       {!usuario && tela === 'login' && <Login onEntrar={entrar} onCadastrar={() => setTela('cadastro')} />}
       {!usuario && tela === 'cadastro' && <Cadastro onEntrar={entrar} onVoltar={() => setTela('login')} />}
-      {usuario && (
-        <main className="cartao">
-          <p>Você entrou como <strong>{usuario.nome}</strong>. A tela de pedidos vem no próximo passo.</p>
-        </main>
-      )}
+      {ehCliente && tela === 'pedidos' && <Pedidos />}
+      {ehCliente && tela === 'dados' && <MeusDados usuario={usuario} onAtualizar={setUsuario} onExcluir={sair} />}
+      {usuario?.perfil === 'AGENTE' && <PedidosAgente usuario={usuario} />}
     </>
   )
 }
