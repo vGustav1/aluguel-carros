@@ -75,7 +75,7 @@ public class ClienteController {
     @DeleteMapping("/{id}")
     public void excluir(@PathVariable Long id, Authentication auth) {
         Cliente cliente = buscarDoUsuarioLogado(id, auth);
-        // Quem tem pedidos não pode ser excluído (o histórico de pedidos se perderia)
+        // Quem tem pedidos não pode ser excluído 
         if (pedidoRepository.existsByClienteId(id)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
