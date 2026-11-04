@@ -1,21 +1,16 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
-import ResumoContrato from '../components/ResumoContrato'
 import { STATUS, descricaoAutomovel, moeda, rendaTotal } from '../formato'
 
 function mensagemErro(e) {
-  if (e.status === 409) return 'O status deste pedido não permite essa ação.'
-  if (e.status === 400) return 'Confira o valor informado.'
-  return e.message
+  return e.status === 409 ? 'O status deste pedido não permite essa ação.' : e.message
 }
 
-// Tela do agente (empresa ou banco): avaliar, modificar e contratar pedidos
-export default function PedidosAgente({ usuario }) {
-  const ehBanco = usuario.papeis?.includes('BANCO')
+export default function PedidosAgente() {
   const [pedidos, setPedidos] = useState([])
   const [automoveis, setAutomoveis] = useState([])
   const [filtro, setFiltro] = useState('TODOS')
-  const [acao, setAcao] = useState(null) 
+  const [editando, setEditando] = useState(null)
   const [carregando, setCarregando] = useState(true)
   const [ocupado, setOcupado] = useState(false)
   const [erro, setErro] = useState('')
@@ -30,11 +25,11 @@ export default function PedidosAgente({ usuario }) {
       .finally(() => setCarregando(false))
   }, [])
 
-  async function executar(chamada) {
+  async function executar(acao) {
     setErro('')
     setOcupado(true)
     try {
-      await chamada()
+      await acao()
     } catch (e) {
       setErro(mensagemErro(e))
     } finally {
@@ -51,72 +46,16 @@ export default function PedidosAgente({ usuario }) {
     executar(async () => trocarNaLista(await api.avaliarPedido(pedido.id, aprovado)))
   }
 
-  // Abre o formulário da ação na linha do pedido
-  function abrir(pedido, tipo) {
-    const valorInicial = { modificar: pedido.automovel.id, contrato: 'CLIENTE', credito: '' }[tipo]
-    setAcao({ id: pedido.id, tipo, valor: valorInicial })
-  }
-
-  function confirmar(evento) {
+  function salvarModificacao(evento) {
     evento.preventDefault()
-    const chamadas = {
-      modificar: () => api.modificarPedido(acao.id, Number(acao.valor)),
-      contrato: () => api.executarContrato(acao.id, acao.valor),
-      credito: () => api.concederCredito(acao.id, Number(acao.valor)),
-    }
     executar(async () => {
-      trocarNaLista(await chamadas[acao.tipo]())
-      setAcao(null)
+      trocarNaLista(await api.modificarPedido(editando.id, Number(editando.automovelId)))
+      setEditando(null)
     })
-  }
-
-  function campoDaAcao(pedido) {
-    const alterar = (e) => setAcao({ ...acao, valor: e.target.value })
-    if (acao.tipo === 'modificar') {
-      return (
-        <select aria-label="Novo automóvel" value={acao.valor} onChange={alterar}>
-          {automoveis.map((a) => <option key={a.id} value={a.id}>{descricaoAutomovel(a)}</option>)}
-        </select>
-      )
-    }
-    if (acao.tipo === 'contrato') {
-      return (
-        <select aria-label="Registrar o carro em nome de" value={acao.valor} onChange={alterar}>
-          <option value="CLIENTE">Carro em nome do cliente ({pedido.cliente.nome})</option>
-          <option value="AGENTE">Carro em nome de {usuario.nome}</option>
-        </select>
-      )
-    }
-    return (
-      <input
-        type="number" min="0.01" step="0.01" placeholder="Valor do crédito (R$)"
-        aria-label="Valor do crédito" value={acao.valor} onChange={alterar} required autoFocus
-      />
-    )
-  }
-
-  function botoes(pedido) {
-    if (pedido.status === 'EM_ANALISE') {
-      return (
-        <>
-          <button onClick={() => avaliar(pedido, true)} disabled={ocupado}>Aprovar</button>
-          <button className="perigo" onClick={() => avaliar(pedido, false)} disabled={ocupado}>Reprovar</button>
-          <button className="secundario" onClick={() => abrir(pedido, 'modificar')} disabled={ocupado}>Modificar</button>
-        </>
-      )
-    }
-    if (pedido.status === 'APROVADO') {
-      return <button onClick={() => abrir(pedido, 'contrato')} disabled={ocupado}>Executar contrato</button>
-    }
-    if (pedido.status === 'CONTRATADO' && ehBanco && !pedido.contrato.contratoCredito) {
-      return <button onClick={() => abrir(pedido, 'credito')} disabled={ocupado}>Conceder crédito</button>
-    }
-    return <span className="vazio">—</span>
   }
 
   if (carregando) return <p className="centro">Carregando pedidos…</p>
 
-  // Mais recentes primeiro
   const visiveis = pedidos
     .filter((p) => filtro === 'TODOS' || p.status === filtro)
     .sort((a, b) => b.id - a.id)
@@ -124,10 +63,7 @@ export default function PedidosAgente({ usuario }) {
   return (
     <main className="cartao largo">
       <h1>Pedidos de aluguel</h1>
-      <p className="vazio">
-        Avalie os pedidos em análise e execute o contrato dos aprovados.
-        {ehBanco && ' Como banco, você também pode conceder crédito aos contratos.'}
-      </p>
+      <p className="vazio">Analise a renda do cliente e aprove ou reprove os pedidos em análise.</p>
 
       <div className="linha">
         <label className="filtro">
@@ -166,21 +102,36 @@ export default function PedidosAgente({ usuario }) {
                     </span>
                   </td>
                   <td>{descricaoAutomovel(p.automovel)}</td>
+                  <td><span className={`status ${p.status}`}>{STATUS[p.status] ?? p.status}</span></td>
                   <td>
-                    <span className={`status ${p.status}`}>{STATUS[p.status] ?? p.status}</span>
-                    {p.contrato && <ResumoContrato contrato={p.contrato} />}
-                  </td>
-                  <td>
-                    {acao?.id === p.id ? (
-                      <form className="acoes" onSubmit={confirmar}>
-                        {campoDaAcao(p)}
-                        <button disabled={ocupado}>Confirmar</button>
-                        <button type="button" className="secundario" onClick={() => setAcao(null)} disabled={ocupado}>
+                    {editando?.id === p.id ? (
+                      <form className="acoes" onSubmit={salvarModificacao}>
+                        <select
+                          aria-label="Novo automóvel"
+                          value={editando.automovelId}
+                          onChange={(e) => setEditando({ ...editando, automovelId: e.target.value })}
+                        >
+                          {automoveis.map((a) => <option key={a.id} value={a.id}>{descricaoAutomovel(a)}</option>)}
+                        </select>
+                        <button disabled={ocupado}>Salvar</button>
+                        <button type="button" className="secundario" onClick={() => setEditando(null)} disabled={ocupado}>
                           Voltar
                         </button>
                       </form>
+                    ) : p.status === 'EM_ANALISE' ? (
+                      <div className="acoes">
+                        <button onClick={() => avaliar(p, true)} disabled={ocupado}>Aprovar</button>
+                        <button className="perigo" onClick={() => avaliar(p, false)} disabled={ocupado}>Reprovar</button>
+                        <button
+                          className="secundario"
+                          onClick={() => setEditando({ id: p.id, automovelId: p.automovel.id })}
+                          disabled={ocupado}
+                        >
+                          Modificar
+                        </button>
+                      </div>
                     ) : (
-                      <div className="acoes">{botoes(p)}</div>
+                      <span className="vazio">—</span>
                     )}
                   </td>
                 </tr>

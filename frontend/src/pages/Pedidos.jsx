@@ -1,14 +1,11 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
-import ResumoContrato from '../components/ResumoContrato'
 import { STATUS, descricaoAutomovel as descricao } from '../formato'
 
 function mensagemErro(e) {
-  // 409 = o status do pedido não permite mais a ação
   return e.status === 409 ? 'Este pedido não pode mais ser alterado.' : e.message
 }
 
-// Tela do cliente: criar, consultar, modificar e cancelar pedidos
 export default function Pedidos() {
   const [pedidos, setPedidos] = useState([])
   const [automoveis, setAutomoveis] = useState([])
@@ -67,7 +64,6 @@ export default function Pedidos() {
 
   if (carregando) return <p className="centro">Carregando pedidos…</p>
 
-  // Mais recentes primeiro
   const ordenados = [...pedidos].sort((a, b) => b.id - a.id)
 
   return (
@@ -120,10 +116,7 @@ export default function Pedidos() {
                       descricao(p.automovel)
                     )}
                   </td>
-                  <td>
-                    <span className={`status ${p.status}`}>{STATUS[p.status] ?? p.status}</span>
-                    {p.contrato && <ResumoContrato contrato={p.contrato} />}
-                  </td>
+                  <td><span className={`status ${p.status}`}>{STATUS[p.status] ?? p.status}</span></td>
                   <td>
                     <div className="acoes">
                       {editando?.id === p.id ? (

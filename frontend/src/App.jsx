@@ -11,11 +11,6 @@ const ABAS_CLIENTE = [
   ['dados', 'Meus dados'],
 ]
 
-function nomePerfil(usuario) {
-  if (usuario.perfil === 'CLIENTE') return 'Cliente'
-  return usuario.papeis?.includes('BANCO') ? 'Banco' : 'Empresa'
-}
-
 export default function App() {
   const [usuario, setUsuario] = useState(null)
   const [tela, setTela] = useState('login')
@@ -67,7 +62,7 @@ export default function App() {
         )}
         {usuario && (
           <div className="conta">
-            <span className="usuario">{usuario.nome} · {nomePerfil(usuario)}</span>
+            <span className="usuario">{usuario.nome} · {ehCliente ? 'Cliente' : 'Agente'}</span>
             <button className="secundario" onClick={sair}>Sair</button>
           </div>
         )}
@@ -79,7 +74,7 @@ export default function App() {
       {!usuario && tela === 'cadastro' && <Cadastro onEntrar={entrar} onVoltar={() => setTela('login')} />}
       {ehCliente && tela === 'pedidos' && <Pedidos />}
       {ehCliente && tela === 'dados' && <MeusDados usuario={usuario} onAtualizar={setUsuario} onExcluir={sair} />}
-      {usuario?.perfil === 'AGENTE' && <PedidosAgente usuario={usuario} />}
+      {usuario?.perfil === 'AGENTE' && <PedidosAgente />}
     </>
   )
 }
