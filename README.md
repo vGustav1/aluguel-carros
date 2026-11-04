@@ -151,7 +151,7 @@ O sistema segue a arquitetura **MVC**, dividida nos dois subsistemas descritos n
 | :---: | :---: |
 | <img src="docs/Casodeuso.png" alt="Diagrama de Casos de Uso" width="400px"> | <img src="docs/Diagrama1.png" alt="Diagrama de Classes" width="400px"> |
 | **Diagrama de Pacotes (Visão Lógica)** | |
-| <img src="docs/diagrama-pacotes.png" alt="Diagrama de Pacotes" width="400px"> | |
+| <img src="docs/diagramapacotes.png" alt="Diagrama de Pacotes" width="400px"> | |
 
 ### Endpoints da API
 
