@@ -17,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.example.aluguelcarros.model.Cliente;
 import com.example.aluguelcarros.repository.ClienteRepository;
+import com.example.aluguelcarros.repository.PedidoRepository;
 import com.example.aluguelcarros.repository.UsuarioRepository;
 
 import jakarta.validation.Valid;
@@ -27,12 +28,14 @@ public class ClienteController {
 
     private final ClienteRepository repository;
     private final UsuarioRepository usuarioRepository;
+    private final PedidoRepository pedidoRepository;
     private final PasswordEncoder passwordEncoder;
 
     public ClienteController(ClienteRepository repository, UsuarioRepository usuarioRepository,
-            PasswordEncoder passwordEncoder) {
+            PedidoRepository pedidoRepository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.usuarioRepository = usuarioRepository;
+        this.pedidoRepository = pedidoRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -71,7 +74,12 @@ public class ClienteController {
 
     @DeleteMapping("/{id}")
     public void excluir(@PathVariable Long id, Authentication auth) {
-        repository.delete(buscarDoUsuarioLogado(id, auth));
+        Cliente cliente = buscarDoUsuarioLogado(id, auth);
+        // Quem tem pedidos não pode ser excluído (o histórico de pedidos se perderia)
+        if (pedidoRepository.existsByClienteId(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
+        }
+        repository.delete(cliente);
     }
 
     // O cliente só pode alterar ou excluir o próprio cadastro

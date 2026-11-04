@@ -42,6 +42,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/clientes").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/clientes/**").hasRole("AGENTE")
+                                                .requestMatchers(HttpMethod.POST, "/pedidos", "/pedidos/*/cancelar").hasRole("CLIENTE")
+                        .requestMatchers(HttpMethod.POST, "/pedidos/*/avaliar").hasRole("AGENTE")
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .successHandler((request, response, auth) -> response.setStatus(HttpStatus.OK.value()))
