@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from './api'
+import Apresentacao from './components/Apresentacao'
+import BotaoTema from './components/BotaoTema'
 import Cadastro from './pages/Cadastro'
 import Login from './pages/Login'
 import MeusDados from './pages/MeusDados'
@@ -45,7 +47,7 @@ export default function App() {
   return (
     <>
       <header className="topo">
-        <strong> Aluguel de Carros</strong>
+        <span className="logo" role="img" aria-label="Locar · Locadora de Carros" />
         {ehCliente && (
           <nav aria-label="Telas">
             {ABAS_CLIENTE.map(([id, nome]) => (
@@ -60,18 +62,28 @@ export default function App() {
             ))}
           </nav>
         )}
-        {usuario && (
-          <div className="conta">
-            <span className="usuario">{usuario.nome} · {ehCliente ? 'Cliente' : 'Agente'}</span>
-            <button className="secundario" onClick={sair}>Sair</button>
-          </div>
-        )}
+        <div className="conta">
+          {usuario && (
+            <span className="usuario">
+              <strong>{usuario.nome}</strong>
+              {ehCliente ? 'Cliente' : 'Agente'}
+            </span>
+          )}
+          <BotaoTema />
+          {usuario && <button className="secundario" onClick={sair}>Sair</button>}
+        </div>
       </header>
 
       {erro && <p className="erro centro" role="alert">{erro}</p>}
 
-      {!usuario && tela === 'login' && <Login onEntrar={entrar} onCadastrar={() => setTela('cadastro')} />}
-      {!usuario && tela === 'cadastro' && <Cadastro onEntrar={entrar} onVoltar={() => setTela('login')} />}
+      {!usuario && (
+        <div className={tela === 'cadastro' ? 'acesso cadastro' : 'acesso'}>
+          <Apresentacao />
+          {tela === 'cadastro'
+            ? <Cadastro onEntrar={entrar} onVoltar={() => setTela('login')} />
+            : <Login onEntrar={entrar} onCadastrar={() => setTela('cadastro')} />}
+        </div>
+      )}
       {ehCliente && tela === 'pedidos' && <Pedidos />}
       {ehCliente && tela === 'dados' && <MeusDados usuario={usuario} onAtualizar={setUsuario} onExcluir={sair} />}
       {usuario?.perfil === 'AGENTE' && <PedidosAgente />}
