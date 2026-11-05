@@ -173,6 +173,7 @@ O sistema segue a arquitetura **MVC**, dividida nos dois subsistemas descritos n
 | PUT | `/pedidos/{id}` | Dono ou agente | Troca o automóvel do pedido |
 | POST | `/pedidos/{id}/cancelar` | Cliente dono | Cancela o pedido |
 | POST | `/pedidos/{id}/avaliar?aprovado=true\|false` | Agente | Aprova ou reprova o pedido |
+| GET | `/design` (front-end, porta 5173) | Público | Página do design system: cores, tipografia, espaçamentos e componentes |
 
 ### Regras de negócio
 
