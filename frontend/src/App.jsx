@@ -9,6 +9,7 @@ import Login from './pages/Login'
 import MeusDados from './pages/MeusDados'
 import Pedidos from './pages/Pedidos'
 import PedidosAgente from './pages/PedidosAgente'
+import Design from './pages/Design'
 
 export default function App() {
   const [usuario, setUsuario] = useState(null)
@@ -41,7 +42,8 @@ export default function App() {
     setTela(nova)
     window.scrollTo(0, 0)
   }
-
+  
+  if (window.location.pathname === '/design') return <Design />
   if (carregando) return <Carregando />
 
   if (!usuario) {
