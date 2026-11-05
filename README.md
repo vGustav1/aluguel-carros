@@ -59,7 +59,7 @@
 
 ## 🔗 Links Úteis
 * 🌐 **Demo Online:** não há; o protótipo é executado localmente.
-* 📖 **Documentação:** [Diagramas UML e histórias de usuário](./docs)
+* 📖 **Documentação:** [Diagramas UML e prints das telas](./docs)
 
 ---
 
@@ -109,6 +109,7 @@
 * **Framework/Biblioteca:** React
 * **Linguagem:** JavaScript
 * **Comunicação com a API:** Fetch API (cookie de sessão e cabeçalho CSRF)
+* **Ícones:** lucide-react
 * **Build Tool:** Vite
 
 ### 🖥️ Back-end
@@ -130,7 +131,7 @@
 
 O sistema segue a arquitetura **MVC**, dividida nos dois subsistemas descritos no enunciado:
 
-- **View (subsistema de páginas web):** front-end em React + Vite, com as telas de login, cadastro, dados do cliente, pedidos e avaliação. Consome a API REST do back-end via HTTP/JSON.
+- **View (subsistema de páginas web):** front-end em React + Vite, com as telas de página inicial, login, cadastro, dados do cliente, pedidos e avaliação. Consome a API REST do back-end via HTTP/JSON.
 - **Controller (`controller`):** endpoints REST. Recebem as requisições, verificam as permissões e aplicam as regras do pedido.
 - **Model (`model` + `repository`):** entidades JPA e repositórios Spring Data JPA, que persistem os dados no PostgreSQL do Supabase.
 - **Configuração (`config`):** segurança (Spring Security) e dados iniciais (agentes e automóveis de exemplo).
@@ -175,6 +176,7 @@ O sistema segue a arquitetura **MVC**, dividida nos dois subsistemas descritos n
 
 ### Regras de negócio
 
+- Os campos do cadastro (nome, RG, CPF, endereço, profissão, login e senha) são obrigatórios (vazio → `400`).
 - O login é único entre todos os usuários (repetido → `409`).
 - O cliente só altera ou exclui o próprio cadastro (`403`). Um cliente com pedidos não pode ser excluído (`409`).
 - Todo pedido começa **EM_ANALISE**.
@@ -297,9 +299,10 @@ Não há deploy. O protótipo roda localmente, e só o banco de dados fica na nu
 ├── README.md                     # 📘 Documentação principal.
 ├── mvnw / mvnw.cmd               # 🛠️ Maven Wrapper.
 ├── pom.xml                       # 🛠️ Build e dependências do back-end.
-├── /docs                         # 📚 Diagramas UML (.dia / .png), histórias de usuário e prints.
+├── /docs                         # 📚 Diagramas UML (.dia / .png) e prints das telas.
 ├── /frontend                     # 📁 Aplicação React + Vite
-│   ├── /src                      # 📂 Código-fonte React (telas e chamadas à API).
+│   ├── /public                   # 🖼️ Logo, imagens e favicon.
+│   ├── /src                      # 📂 Código-fonte React (telas, componentes e chamadas à API).
 │   ├── index.html                # 🌐 Página base.
 │   ├── package.json              # 📦 Dependências e scripts.
 │   └── vite.config.js            # ⚙️ Configuração do Vite (proxy para a API).
